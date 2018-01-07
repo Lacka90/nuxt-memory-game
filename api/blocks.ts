@@ -6,4 +6,5 @@ export const getBlocks = (total = 10) =>
       guess: Math.floor(index / 2),
       image: `https://picsum.photos/200/300?image=${100 * Math.floor(index / 2)}`,
       flip: false,
-    }));
+    }))
+    .sort(() => 0.5 - Math.random());

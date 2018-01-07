@@ -1,15 +1,22 @@
 <template>
   <div>
-    Game Win:{{ winner }}
+    <div class="winner" v-if="winner">
+      <div>
+        <h2>Winner</h2>
+        <b-button variant="primary" @click="restart">
+          Play again
+        </b-button>
+      </div>
+    </div>
     <div class="grid-container">
       <div class="grid-cell" 
           :class="{ flipped: block.flip }"
           :style="{ backgroundImage: 'url(' + block.image + ')' }"
-          @click="select(block.index)"
-          v-for="block in blocks" 
+          @click="select(index)"
+          v-for="(block, index) in blocks" 
           :key="block.index">
         <div class="rotate">
-          <span>{{ block.index }}</span>
+          <span>{{ index + 1 }}</span>
         </div>
         <div class="image"></div>
       </div>
@@ -20,35 +27,56 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "nuxt-class-component"
-import Card from "~/components/Card.vue"
 import { State, Getter, Action } from "vuex-class"
+import {} from '~/store';
 
-@Component({
-  components: {
-    Card
-  }
-})
+@Component({})
 export default class extends Vue {
   @State blocks
   @Action flip
   @Action backflip
+  @Action resetSelected
+  @Action nuxtServerInit
   @Getter winner
-
-  timeoutId: any = undefined;
+  @Getter selectedBlocks
 
   select(index) {
-    this.flip(index);
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
+    if (this.selectedBlocks.length < 2) {
+      this.flip(index);
     }
-    this.timeoutId = setTimeout(() => {
-      this.backflip();
-    }, 1000);
+    
+    if (this.selectedBlocks.length === 2) {
+      const block1 = this.selectedBlocks[0];
+      const block2 = this.selectedBlocks[1];
+      if (block1.guess === block2.guess) {
+        return this.resetSelected();
+      }
+      setTimeout(this.backflip, 1000);
+    }
   }
-
+  restart() {
+    this.nuxtServerInit();
+  }
 }
 </script>
 <style>
+  .winner {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+  }
+  .winner > div {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
   .grid-container {
     display: grid;
     grid-gap: 30px;
@@ -58,6 +86,7 @@ export default class extends Vue {
   .grid-container > .grid-cell {
     display: grid;
     position: relative;
+    border: 1px solid grey;
   }
 
   .grid-container > .grid-cell > .rotate {
